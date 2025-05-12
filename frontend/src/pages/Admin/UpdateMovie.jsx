@@ -19,13 +19,33 @@ const UpdateMovie = () => {
     cast: [],
     ratings: 0,
     image: null,
+    genre: "",
   });
 
   const [selectedImage, setSelectedImage] = useState(null);
   const { data: initialMovieData } = useGetSpecificMovieQuery(id);
 
+  const [genres, setGenres] = useState([]);
+
+useEffect(() => {
+  const fetchGenres = async () => {
+    try {
+      const response = await fetch("/api/v1/genre/genres");
+      const data = await response.json();
+      console.log("Fetched genres:", data);
+      setGenres(data);
+    } catch (error) {
+      console.error("Failed to fetch genres:", error);
+    }
+  };
+
+  fetchGenres();
+}, []);
+
+
   useEffect(() => {
     if (initialMovieData) {
+      console.log("initialMovieData", initialMovieData);
       setMovieData(initialMovieData);
     }
   }, [initialMovieData]);
@@ -59,7 +79,8 @@ const UpdateMovie = () => {
         !movieData.name ||
         !movieData.year ||
         !movieData.detail ||
-        !movieData.cast
+        !movieData.cast ||
+        !movieData.genre 
       ) {
         toast.error("Please fill in all required fields");
         return;
@@ -161,6 +182,25 @@ const UpdateMovie = () => {
             />
           </label>
         </div>
+
+        <div className="mb-4">
+  <label className="block">
+    Genre:
+    <select
+      name="genre"
+      value={movieData.genre}
+      onChange={handleChange}
+      className="border px-2 py-1 w-full"
+    >
+      <option value="">Select Genre</option>
+      {genres.map((genre) => (
+        <option key={genre._id} value={genre._id}>
+          {genre.name}
+        </option>
+      ))}
+    </select>
+  </label>
+</div>
 
         <div className="mb-4">
           <label

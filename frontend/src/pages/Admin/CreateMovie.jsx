@@ -69,58 +69,67 @@ const CreateMovie = () => {
 
   const handleCreateMovie = async () => {
     try {
-      if (
-        !movieData.name ||
-        !movieData.year ||
-        !movieData.detail ||
-        !movieData.cast ||
-        !selectedImage
-      ) {
-        toast.error("Please fill all required fields");
-        return;
-      }
-
-      let uploadedImagePath = null;
-
+      let uploadedImagePath = "/uploads/default-movie.jpg"; // Set your own default image path
+  
+      // Upload image if one was selected
       if (selectedImage) {
         const formData = new FormData();
         formData.append("image", selectedImage);
-
+  
         const uploadImageResponse = await uploadImage(formData);
 
-        if (uploadImageResponse.data) {
+        if (uploadImageResponse.error) {
+          console.error("❌ Upload failed:", uploadImageResponse.error);
+          toast.error("Upload failed");
+        }
+  
+        if (uploadImageResponse.data?.image) {
           uploadedImagePath = uploadImageResponse.data.image;
         } else {
-          console.error("Failed to upload image: ", uploadImageErrorDetails);
-          toast.error("Failed to upload image");
-          return;
+          console.warn("Using default image due to upload failure.");
         }
-
-        await createMovie({
-          ...movieData,
-          image: uploadedImagePath,
-        });
-
-        navigate("/admin/movies-list");
-
-        setMovieData({
-          name: "",
-          year: 0,
-          detail: "",
-          cast: [],
-          ratings: 0,
-          image: null,
-          genre: "",
-        });
-
-        toast.success("Movie Added To Database");
       }
+  
+      // Apply default values if fields are empty
+      const payload = {
+        name: movieData.name || "Untitled Movie",
+        year: movieData.year || new Date().getFullYear(),
+        detail: movieData.detail || "No description provided.",
+        cast: movieData.cast.length > 0 ? movieData.cast : ["Unknown Cast"],
+        rating: movieData.rating || 0,
+        genre: movieData.genre || genres[0]?._id || "",
+        image: uploadedImagePath,
+      };
+  
+      // Send request
+      const response = await createMovie(payload);
+  
+      if (response.error) {
+        toast.error("Failed to create movie.");
+        console.error("API Error:", response.error);
+        return;
+      }
+  
+      toast.success("Movie Added To Database");
+      navigate("/admin/movies-list");
+  
+      // Reset form
+      setMovieData({
+        name: "",
+        year: 0,
+        detail: "",
+        cast: [],
+        rating: 0,
+        image: null,
+        genre: genres[0]?._id || "",
+      });
+      setSelectedImage(null);
     } catch (error) {
-      console.error("Failed to create movie: ", createMovieErrorDetail);
-      toast.error(`Failed to create movie: ${createMovieErrorDetail?.message}`);
+      console.error("Unexpected Error:", error);
+      toast.error("Something went wrong while creating the movie.");
     }
   };
-
+  
   return (
     <div className="container flex justify-center items-center mt-4">
       <form>

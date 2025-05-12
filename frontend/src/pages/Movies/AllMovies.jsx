@@ -84,9 +84,9 @@ const AllMovies = () => {
             <div className="absolute inset-0 bg-gradient-to-b from-gray-800 to-black opacity-60"></div>
 
             <div className="relative z-10 text-center text-white mt-[10rem]">
-              <h1 className="text-8xl font-bold mb-4">The Movies Hub</h1>
+              <h1 className="text-8xl font-bold mb-4">WatchWise</h1>
               <p className="text-2xl">
-                Cinematic Odyssey: Unveiling the Magic of Movies
+                Discover. Review. Recommend
               </p>
             </div>
 

@@ -14,7 +14,10 @@ const getAllMovies = async (req, res) => {
   try {
     const movies = await Movie.find();
     res.json(movies);
+    console.log('movies', movies);
   } catch (error) {
+
+    console.error(error);
     res.status(500).json({ error: error.message });
   }
 };

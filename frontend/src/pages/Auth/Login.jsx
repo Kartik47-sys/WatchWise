@@ -17,6 +17,8 @@ const Login = () => {
 
   const { userInfo } = useSelector((state) => state.auth);
 
+  console.log(userInfo);
+
   const { search } = useLocation();
   const sp = new URLSearchParams(search);
   const redirect = sp.get("redirect") || "/";
