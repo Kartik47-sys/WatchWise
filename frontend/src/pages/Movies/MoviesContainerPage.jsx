@@ -20,43 +20,59 @@ const MoviesContainerPage = () => {
     setSelectedGenre(genreId);
   };
 
-  const filteredMovies = data?.filter(
-    (movie) => selectedGenre === null || movie.genre === selectedGenre
+  const filteredMovies = Array.from(
+    new Map(
+      data
+        ?.filter(
+          (movie) =>
+            selectedGenre === null ||
+            (Array.isArray(movie.genre)
+              ? movie.genre.includes(selectedGenre)
+              : movie.genre === selectedGenre)
+        )
+        .map((movie) => [movie._id, movie]) // Assumes _id is unique
+    ).values()
   );
-
+  
+  
   return (
-    <div className="flex flex-col lg:flex-row lg:justify-between items-center">
-      <nav className=" ml-[4rem] flex flex-row xl:flex-col lg:flex-col md:flex-row sm:flex-row">
-        {genres?.map((g) => (
-          <button
-            key={g._id}
-            className={`transition duration-300 ease-in-out hover:bg-gray-200 block p-2 rounded mb-[1rem] text-lg ${
-              selectedGenre === g._id ? "bg-gray-200" : ""
-            }`}
-            onClick={() => handleGenreClick(g._id)}
-          >
-            {g.name}
-          </button>
-        ))}
-      </nav>
+    <div className="flex flex-col lg:flex-row gap-10 items-start px-6">
+  {/* Genre Filter */}
+  <nav className="flex flex-wrap lg:flex-col gap-2 sticky top-20">
+    {genres?.map((g) => (
+      <button
+        key={g._id}
+        className={`px-4 py-2 rounded-full text-sm font-medium transition shadow ${
+          selectedGenre === g._id
+            ? "bg-teal-600 text-white"
+            : "bg-zinc-700 text-gray-300 hover:bg-zinc-600"
+        }`}
+        onClick={() => handleGenreClick(g._id)}
+      >
+        {g.name}
+      </button>
+    ))}
+  </nav>
 
-      <section className="flex flex-col justify-center items-center w-full lg:w-auto">
-        <div className="w-full lg:w-[100rem] mb-8 ">
-          <h1 className="mb-5">Choose For You</h1>
-          <SliderUtil data={randomMovies} />
-        </div>
-
-        <div className="w-full lg:w-[100rem] mb-8">
-          <h1 className="mb-5">Top Movies</h1>
-          <SliderUtil data={topMovies} />
-        </div>
-
-        <div className="w-full lg:w-[100rem] mb-8">
-          <h1 className="mb-5">Choose Movie</h1>
-          <SliderUtil data={filteredMovies} />
-        </div>
-      </section>
+  {/* Movie Sliders */}
+  <section className="flex flex-col gap-12 w-full">
+    <div>
+      <h2 className="text-xl font-semibold mb-4 text-white">Recommended for You</h2>
+      <SliderUtil data={randomMovies} />
     </div>
+
+    <div>
+      <h2 className="text-xl font-semibold mb-4 text-white">Top Movies</h2>
+      <SliderUtil data={topMovies} />
+    </div>
+
+    <div>
+      <h2 className="text-xl font-semibold mb-4 text-white">Browse by Genre</h2>
+      <SliderUtil data={filteredMovies} />
+    </div>
+  </section>
+</div>
+
   );
 };
 

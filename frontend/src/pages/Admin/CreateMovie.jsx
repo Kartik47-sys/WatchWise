@@ -21,6 +21,7 @@ const CreateMovie = () => {
   });
 
   const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedGenre, setSelectedGenre] = useState("");
 
   const [
     createMovie,
@@ -36,11 +37,12 @@ const CreateMovie = () => {
 
   useEffect(() => {
     if (genres) {
+      const defaultGenreId = genres[0]?._id || "";
       setMovieData((prevData) => ({
         ...prevData,
-        genre: genres[0]?._id || "",
+        genre: defaultGenreId,
       }));
-      console.log(genres[0]?._id);
+      setSelectedGenre(defaultGenreId);
     }
   }, [genres]);
 
@@ -48,12 +50,11 @@ const CreateMovie = () => {
     const { name, value } = e.target;
 
     if (name === "genre") {
-      const selectedGenre = genres.find((genre) => genre.name === value);
-
       setMovieData((prevData) => ({
         ...prevData,
-        genre: selectedGenre ? selectedGenre._id : "",
+        genre: value,
       }));
+      setSelectedGenre(value);
     } else {
       setMovieData((prevData) => ({
         ...prevData,
@@ -69,28 +70,24 @@ const CreateMovie = () => {
 
   const handleCreateMovie = async () => {
     try {
-      let uploadedImagePath = "/uploads/default-movie.jpg"; // Set your own default image path
-  
-      // Upload image if one was selected
+      let uploadedImagePath = "/uploads/default-movie.jpg";
+
       if (selectedImage) {
         const formData = new FormData();
         formData.append("image", selectedImage);
-  
+
         const uploadImageResponse = await uploadImage(formData);
 
         if (uploadImageResponse.error) {
           console.error("❌ Upload failed:", uploadImageResponse.error);
           toast.error("Upload failed");
         }
-  
+
         if (uploadImageResponse.data?.image) {
           uploadedImagePath = uploadImageResponse.data.image;
-        } else {
-          console.warn("Using default image due to upload failure.");
         }
       }
-  
-      // Apply default values if fields are empty
+
       const payload = {
         name: movieData.name || "Untitled Movie",
         year: movieData.year || new Date().getFullYear(),
@@ -100,20 +97,18 @@ const CreateMovie = () => {
         genre: movieData.genre || genres[0]?._id || "",
         image: uploadedImagePath,
       };
-  
-      // Send request
+
       const response = await createMovie(payload);
-  
+
       if (response.error) {
         toast.error("Failed to create movie.");
         console.error("API Error:", response.error);
         return;
       }
-  
+
       toast.success("Movie Added To Database");
       navigate("/admin/movies-list");
-  
-      // Reset form
+
       setMovieData({
         name: "",
         year: 0,
@@ -124,12 +119,15 @@ const CreateMovie = () => {
         genre: genres[0]?._id || "",
       });
       setSelectedImage(null);
+      setSelectedGenre(genres[0]?._id || "");
     } catch (error) {
       console.error("Unexpected Error:", error);
       toast.error("Something went wrong while creating the movie.");
     }
   };
-  
+
+  const selectedGenreName = genres?.find((g) => g._id === selectedGenre)?.name;
+
   return (
     <div className="container flex justify-center items-center mt-4">
       <form>
@@ -196,13 +194,20 @@ const CreateMovie = () => {
                 <option>Loading genres...</option>
               ) : (
                 genres.map((genre) => (
-                  <option key={genre.id} value={genre.id}>
+                  <option key={genre._id} value={genre._id}>
                     {genre.name}
                   </option>
                 ))
               )}
             </select>
           </label>
+
+          {/* ✅ Show the selected genre name */}
+          {selectedGenre && (
+            <p className="mt-2 text-green-300">
+              Selected Genre: <strong>{selectedGenreName}</strong>
+            </p>
+          )}
         </div>
 
         <div className="mb-4">
@@ -243,4 +248,5 @@ const CreateMovie = () => {
     </div>
   );
 };
+
 export default CreateMovie;

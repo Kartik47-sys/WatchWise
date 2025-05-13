@@ -24,49 +24,70 @@ const UpdateMovie = () => {
 
   const [selectedImage, setSelectedImage] = useState(null);
   const { data: initialMovieData } = useGetSpecificMovieQuery(id);
-
   const [genres, setGenres] = useState([]);
-
-useEffect(() => {
-  const fetchGenres = async () => {
-    try {
-      const response = await fetch("/api/v1/genre/genres");
-      const data = await response.json();
-      console.log("Fetched genres:", data);
-      setGenres(data);
-    } catch (error) {
-      console.error("Failed to fetch genres:", error);
-    }
-  };
-
-  fetchGenres();
-}, []);
+  const [selectedGenre, setSelectedGenre] = useState("");
 
 
   useEffect(() => {
+    const fetchGenres = async () => {
+      try {
+        const response = await fetch("/api/v1/genre/genres");
+        const data = await response.json();
+        setGenres(data);
+      } catch (error) {
+        console.error("Failed to fetch genres:", error);
+      }
+    };
+
+    fetchGenres();
+  }, []);
+
+  useEffect(() => {
     if (initialMovieData) {
-      console.log("initialMovieData", initialMovieData);
-      setMovieData(initialMovieData);
+      const genreId =
+        typeof initialMovieData.genre === "object" && initialMovieData.genre !== null
+          ? initialMovieData.genre._id
+          : initialMovieData.genre || "";
+  
+      setMovieData({
+        ...initialMovieData,
+        cast: initialMovieData.cast || [],
+        genre: genreId,
+      });
+  
+      setSelectedGenre(genreId); // set this too
     }
   }, [initialMovieData]);
+  
 
-  const [updateMovie, { isLoading: isUpdatingMovie }] =
-    useUpdateMovieMutation();
-
-  const [
-    uploadImage,
-    { isLoading: isUploadingImage, error: uploadImageErrorDetails },
-  ] = useUploadImageMutation();
-
+  const [updateMovie, { isLoading: isUpdatingMovie }] = useUpdateMovieMutation();
+  const [uploadImage, { isLoading: isUploadingImage, error: uploadImageErrorDetails }] =
+    useUploadImageMutation();
   const [deleteMovie] = useDeleteMovieMutation();
+
+  console.log("selectedGenre", selectedGenre);
+  const name=genres.find((g) => g._id === selectedGenre)?.name;
+  console.log("name", name);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    console.log('name', name);
+    console.log('value', value);
     setMovieData((prevData) => ({
       ...prevData,
       [name]: value,
     }));
   };
+
+  const handleGenreChange = (e) => {
+    const value = e.target.value;
+    setSelectedGenre(value);
+    setMovieData((prev) => ({
+      ...prev,
+      genre: value,
+    }));
+  };
+  
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -80,7 +101,7 @@ useEffect(() => {
         !movieData.year ||
         !movieData.detail ||
         !movieData.cast ||
-        !movieData.genre 
+        !movieData.genre
       ) {
         toast.error("Please fill in all required fields");
         return;
@@ -104,7 +125,7 @@ useEffect(() => {
       }
 
       await updateMovie({
-        id: id,
+        id,
         updatedMovie: {
           ...movieData,
           image: uploadedImagePath,
@@ -128,6 +149,9 @@ useEffect(() => {
     }
   };
 
+  console.log("movies.genre", movieData.genre);
+  console.log('fetched genres', genres);
+
   return (
     <div className="container flex justify-center items-center mt-4">
       <form>
@@ -145,6 +169,7 @@ useEffect(() => {
             />
           </label>
         </div>
+
         <div className="mb-4">
           <label className="block">
             Year:
@@ -157,6 +182,7 @@ useEffect(() => {
             />
           </label>
         </div>
+
         <div className="mb-4">
           <label className="block">
             Detail:
@@ -168,6 +194,7 @@ useEffect(() => {
             />
           </label>
         </div>
+
         <div className="mb-4">
           <label className="block">
             Cast (comma-separated):
@@ -176,7 +203,10 @@ useEffect(() => {
               name="cast"
               value={movieData.cast.join(", ")}
               onChange={(e) =>
-                setMovieData({ ...movieData, cast: e.target.value.split(", ") })
+                setMovieData({
+                  ...movieData,
+                  cast: e.target.value.split(", ").map((c) => c.trim()),
+                })
               }
               className="border px-2 py-1 w-full"
             />
@@ -188,8 +218,8 @@ useEffect(() => {
     Genre:
     <select
       name="genre"
-      value={movieData.genre}
-      onChange={handleChange}
+      value={selectedGenre}
+      onChange={handleGenreChange}
       className="border px-2 py-1 w-full"
     >
       <option value="">Select Genre</option>
@@ -200,7 +230,13 @@ useEffect(() => {
       ))}
     </select>
   </label>
+
+  {/* 💡 Show the selected genre name here */}
+  {selectedGenre && (
+    <p className="mt-2 text-green-300">Selected Genre: <strong>{name}</strong></p>
+  )}
 </div>
+
 
         <div className="mb-4">
           <label
@@ -249,4 +285,5 @@ useEffect(() => {
     </div>
   );
 };
+
 export default UpdateMovie;

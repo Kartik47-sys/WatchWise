@@ -6,7 +6,7 @@ import MovieCard from "../pages/Movies/MovieCard";
 const SliderUtil = ({ data }) => {
   const settings = {
     dots: true,
-    infinite: true,
+    infinite: data?.length > 4,
     speed: 500,
     slidesToShow: 4,
     slidesToScroll: 2,
@@ -14,10 +14,13 @@ const SliderUtil = ({ data }) => {
 
   return (
     <Slider {...settings}>
-      {data?.map((movie) => (
-        <MovieCard key={movie._id} movie={movie} />
-      ))}
-    </Slider>
+  {data?.map((movie) => (
+    <div className="px-2">
+      <MovieCard key={movie._id} movie={movie} />
+    </div>
+  ))}
+</Slider>
+
   );
 };
 
